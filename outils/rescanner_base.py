@@ -51,7 +51,14 @@ def principal():
                            maintenant))
 
     with base:
-        base.execute("DELETE FROM detections")
+        # Ne reconstruit que les detections issues des descriptions : les
+        # detections orales (source='transcription') appartiennent a
+        # second_rideau.py, qui est lui-meme rejouable.
+        colonnes = [c[1] for c in base.execute("PRAGMA table_info(detections)")]
+        if "source" in colonnes:
+            base.execute("DELETE FROM detections WHERE source = 'description'")
+        else:
+            base.execute("DELETE FROM detections")
         base.executemany(
             "INSERT OR IGNORE INTO detections (video_id, entite, signaux, "
             "types_signaux, force, indices_commerciaux, extrait, "

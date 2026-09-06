@@ -2,30 +2,12 @@
 
 Produit par `outils/relire_jugements.py` depuis `A_JUGER.xlsx`.
 
-**Verdicts recoltes : 48** (lignes nouvelles ou modifiees : 0)
+**Verdicts recoltes : 1** (lignes nouvelles ou modifiees : 1)
 
-- hors sujet : 42
-- collaboration remuneree : 5
-- je ne sais pas : 1
+- collaboration remuneree : 1
 
-## Notes de Vincent (2) — critere 10
+## Notes de Vincent (0) — critere 10
 
-**SQUEEZIE / Marie** (lQ53145a3cY) — verdict : hors sujet
-> Lis l'extrait. Il n'y a rien qui indique une collaboration. J'ai lu la description entière, et c'est la même chose
+Aucune note ce passage.
 
-REPONSE (06/09) : tu as raison. « Marie » a accroche un prenom dans les
-credits d'equipe, et l'indice commercial concernait un autre annonceur
-(NordVPN/Saily), loin du signal. Correction : l'indice ne compte desormais
-que s'il est a moins de 500 caracteres du signal (portees 250/500/800
-mesurees sur tes 391 verdicts — voir mesure_detection du jour).
-
-**Greg Guillotin / CNIEL** (AImmeZ4o13g) — verdict : hors sujet
-> pareil
-
-REPONSE (06/09) : le signal fautif est « CHAUD ! », nom d'une serie
-LAIT'FLIX, qui a accroche « un nouveau piege tres chaud ! ». Trop generique
-pour designer le CNIEL a lui seul : descendu en signal faible dans le
-dictionnaire, avec ton cas en justification.
-
-
-Cumul : `donnees/jugements_recoltes.csv` (48 paires).
+Cumul : `donnees/jugements_recoltes.csv` (49 paires).

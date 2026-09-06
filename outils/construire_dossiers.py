@@ -93,6 +93,21 @@ def principal():
     with open(CHEMIN_DETECTIONS, encoding="utf-8-sig") as f:
         for d in csv.DictReader(f):
             detections[(d["video_id"], normaliser(d["entite"]))] = d
+    # Les detections de la base (dont les orales du second rideau) viennent
+    # completer : un signal entendu dans la video corrobore le dossier.
+    for r in base.execute(
+            "SELECT video_id, entite, signaux, indices_commerciaux, "
+            "extrait, source FROM detections"):
+        cle = (r[0], normaliser(r[1]))
+        etiquette = " [oral]" if r[5] == "transcription" else ""
+        if cle in detections:
+            deja = detections[cle]
+            if etiquette and r[2]:
+                deja["signaux"] += f" + {r[2]}{etiquette}"
+        else:
+            detections[cle] = {"signaux": (r[2] or "") + etiquette,
+                               "indices_commerciaux": r[3] or "",
+                               "extrait": r[4] or ""}
 
     createurs, comptes, collaborations = {}, {}, []
     commanditaires_utilises = {}

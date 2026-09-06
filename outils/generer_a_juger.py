@@ -252,11 +252,12 @@ def principal():
         extrait.alignment = Alignment(wrap_text=True, vertical="top")
         # cellule 10 et 11 : a Vincent
 
-    validation = DataValidation(
-        type="list", formula1='"' + ",".join(VERDICTS) + '"',
-        allow_blank=True, showDropDown=False)
-    ws.add_data_validation(validation)
-    validation.add(f"J2:J{len(lot) + 1}")
+    if lot:
+        validation = DataValidation(
+            type="list", formula1='"' + ",".join(VERDICTS) + '"',
+            allow_blank=True, showDropDown=False)
+        ws.add_data_validation(validation)
+        validation.add(f"J2:J{len(lot) + 1}")
 
     largeurs = {"A": 4, "B": 22, "C": 11, "D": 11, "E": 16, "F": 26, "G": 40,
                 "H": 8, "I": 60, "J": 26, "K": 40}
