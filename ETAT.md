@@ -121,11 +121,20 @@ contrat) : finir YouTube avant d'ouvrir un autre reseau.
 REPORTE apres YouTube : TikTok (critere 6 du contrat), Instagram (jeton
 Meta).
 
+## Decisions appliquees le 06/09 au soir
+
+- **D-marques APPLIQUEE** (ratification globale de Vincent, « je te fais
+  confiance, continuons ») : les 52 noms de marque en texte libre sont
+  sortis de la detection (statut propose, reversible cellule par cellule).
+  Effet : 3 736 -> **126 paires** sur le corpus gele (-97 % de bruit),
+  banc interprofession inchange a 94 % / 79 %.
+- **Routage vitrine maintenu** (jamais objecte).
+- **PROPOSITIONS integrees** : 6 chaines YouTube ajoutees a la surveillance
+  (Morgan VS, Guillaume Sanchez, Jamy, Hakim Jemili, Laura Martinez, La
+  Brigade), 9 deja suivies, 39 a resoudre (Instagram/TikTok, en attente de
+  ces plateformes) ; 47 signaux au dictionnaire en `propose`.
+  MESURE : `recherche/integration_propositions_2026-09-06.md`.
+
 ## Interventions attendues de Vincent
 
-1. **Decision D-marques : que faire des noms de marque en texte libre ?**
-   MESURE : 0/27 sur le lot neuf. Proposition : les sortir de la detection
-   (statut propose) jusqu'a une regle plus fine ; le canal marque passerait
-   par les @comptes et hashtags de marques, a collecter.
-2. **Ratifier le routage vitrine** (toujours en attente).
-3. Plus tard : le jeton Meta quand il decidera.
+1. Plus tard : le jeton Meta quand il decidera d'ouvrir Instagram.
