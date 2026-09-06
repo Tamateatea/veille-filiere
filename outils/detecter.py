@@ -134,18 +134,56 @@ def extraire(texte, position, longueur=240):
     return prefixe + extrait.replace("\n", " ⏎ ") + suffixe
 
 
+def analyser(texte, signaux):
+    """Analyse UN texte et rend la liste des detections par entite.
+
+    C'est LA fonction de detection du projet : le balayage du corpus gele
+    (ce fichier) et le facteur nocturne (facteur.py) l'appellent tous deux.
+    Une correction faite ici vaut partout — lecon de l'ancien projet, ou
+    charger_alias recopiee six fois avait six reglages differents.
+    """
+    norme = normaliser_positionnel(texte)
+    occurrences_indices = [
+        (nom, m.start())
+        for nom, motif in INDICATEURS.items()
+        for m in re.finditer(motif, norme)
+    ]
+    resultats = []
+    for entite, hits in detecter_dans(texte, signaux).items():
+        indices = sorted({
+            nom for nom, pos in occurrences_indices
+            if any(abs(pos - p) <= PORTEE_INDICE for _, p in hits)
+        })
+        premiere = min(p for _, p in hits)
+        resultats.append({
+            "entite": entite,
+            "signaux_touches": [s for s, _ in hits],
+            "signaux": " | ".join(sorted({s["texte"] for s, _ in hits})),
+            "types_signaux": " | ".join(
+                sorted({s["type_signal"] for s, _ in hits if s["type_signal"]})),
+            "force": ("fort" if any(s["force"] == "fort" for s, _ in hits)
+                      else "faible"),
+            "indices_commerciaux": " | ".join(indices),
+            "extrait": extraire(texte, premiere),
+        })
+    return resultats
+
+
+def canaux_vitrines_depuis(signaux):
+    """Nom de canal normalise -> entite, pour router les contenus vitrines."""
+    table = {}
+    for s in signaux:
+        if s["type_signal"] in TYPES_CANAUX:
+            table[normaliser_positionnel(s["texte"]).lstrip("@")] = s["entite"]
+    return table
+
+
 def principal():
     signaux, temoins = charger_signaux()
     with open(CHEMIN_CORPUS, encoding="utf-8") as f:
         videos = json.load(f)["touchees"]
 
-    # Table des canaux vitrines : nom normalise -> entite.
-    canaux_vitrines = {}
-    for s in signaux:
-        if s["type_signal"] in TYPES_CANAUX:
-            nom = normaliser_positionnel(s["texte"]).lstrip("@")
-            canaux_vitrines[nom] = s["entite"]
-
+    canaux_vitrines = canaux_vitrines_depuis(signaux)
     aujourd_hui = dt.date.today().isoformat()
     detections = []
     vitrines = []
@@ -165,38 +203,18 @@ def principal():
                 "url": v.get("url", ""),
             })
             continue
-        norme = normaliser_positionnel(texte)
-        occurrences_indices = [
-            (nom, m.start())
-            for nom, motif in INDICATEURS.items()
-            for m in re.finditer(motif, norme)
-        ]
-        for entite, hits in detecter_dans(texte, signaux).items():
-            indices = sorted({
-                nom for nom, pos in occurrences_indices
-                if any(abs(pos - p) <= PORTEE_INDICE for _, p in hits)
-            })
-            noms = sorted({s["texte"] for s, _ in hits})
-            types = sorted({s["type_signal"] for s, _ in hits if s["type_signal"]})
-            force = ("fort" if any(s["force"] == "fort" for s, _ in hits)
-                     else "faible")
-            for s, _ in hits:
+        for d in analyser(texte, signaux):
+            for s in d.pop("signaux_touches"):
                 compte_signaux[s["texte"]] += 1
-            premiere = min(p for _, p in hits)
-            detections.append({
+            d.update({
                 "video_id": v.get("video_id", ""),
                 "chaine": v.get("chaine", ""),
                 "abonnes": v.get("abonnes", ""),
                 "publiee": v.get("publiee", ""),
                 "titre": v.get("titre", ""),
                 "url": v.get("url", ""),
-                "entite": entite,
-                "signaux": " | ".join(noms),
-                "types_signaux": " | ".join(types),
-                "force": force,
-                "indices_commerciaux": " | ".join(indices),
-                "extrait": extraire(texte, premiere),
             })
+            detections.append(d)
         for entite, hits in detecter_dans(texte, temoins).items():
             for s, _ in hits:
                 compte_temoins[s["texte"]] += 1

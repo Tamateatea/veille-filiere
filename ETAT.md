@@ -89,14 +89,30 @@ Le pre-tri par Claude est valide comme mecanisme : 43 lignes triees, zero
 desaccord de Vincent. Le protocole devient : l'outil detecte -> Claude
 pre-trie avec raison -> Vincent tranche sur les cas non evidents.
 
+## Le facteur nocturne existe et tourne (06/09 au soir)
+
+- **Base SQLite** `donnees/veille.sqlite` : 2 897 comptes, 27 353 videos
+  migrees + toutes les nouvelles (MESURE, `recherche/base_sqlite_2026-09-06.md`).
+  Regle nouvelle : le facteur garde TOUT ce qu'il lit, signal ou pas — un
+  signal decouvert plus tard restera cherchable retroactivement (demande de
+  Vincent du 06/09).
+- **`outils/facteur.py`** : veille incrementale par flux RSS publics (zero
+  quota, zero cle), idempotente (relancer ne refait rien), une transaction
+  par compte (une panne ne corrompt rien). Detection partagee via
+  `detecter.analyser` — une seule fonction pour tout le projet.
+- **Tache planifiee Windows « Veille filiere - facteur »**, chaque nuit a
+  3h00. Essai valide sur 5 comptes (61 videos, 0 echec,
+  `recherche/facteur_2026-09-06_1708.md`) ; premiere tournee complete
+  lancee le 06/09 au soir.
+
 ## Prochaine etape
 
-4. **Le facteur** : la veille incrementale nocturne (critere 1), stockage
-   SQLite a construire a cette occasion.
 5. **TikTok** : rattacher les partenariats labellises aux commanditaires via
    hashtags (critere 6).
 6. **Le flux decouverte** (contenus_vitrines.csv, 2 916 videos) : en sortir
    des noms de createurs a proposer — c'est le canal a haut rendement.
+7. **Generer A_JUGER depuis la base** au fil de l'eau (les nouvelles
+   detections du facteur, pre-triees par Claude).
 
 ## Interventions attendues de Vincent
 
