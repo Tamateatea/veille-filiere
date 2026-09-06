@@ -105,14 +105,21 @@ pre-trie avec raison -> Vincent tranche sur les cas non evidents.
   `recherche/facteur_2026-09-06_1708.md`) ; premiere tournee complete
   lancee le 06/09 au soir.
 
-## Prochaine etape
+## Prochaine etape — YOUTUBE D'ABORD
 
-5. **TikTok** : rattacher les partenariats labellises aux commanditaires via
-   hashtags (critere 6).
-6. **Le flux decouverte** (contenus_vitrines.csv, 2 916 videos) : en sortir
+Decision de Vincent du 06/09 au soir (conseil de son ami, amendement au
+contrat) : finir YouTube avant d'ouvrir un autre reseau.
+
+5. **Le flux decouverte** (contenus_vitrines.csv, 2 916 videos) : en sortir
    des noms de createurs a proposer — c'est le canal a haut rendement.
-7. **Generer A_JUGER depuis la base** au fil de l'eau (les nouvelles
+6. **Generer A_JUGER depuis la base** au fil de l'eau (les nouvelles
    detections du facteur, pre-triees par Claude).
+7. **Le second rideau** : transcriptions des comptes deja suspects
+   (81 % / 49 % mesures par l'archive, a re-deriver avant usage).
+8. Canal marque par @comptes et hashtags officiels (collecte de Vincent).
+
+REPORTE apres YouTube : TikTok (critere 6 du contrat), Instagram (jeton
+Meta).
 
 ## Interventions attendues de Vincent
 

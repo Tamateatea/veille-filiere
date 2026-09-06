@@ -4,6 +4,14 @@ Propose le 6 septembre 2026. **Valide par Vincent le 6 septembre 2026**, avec
 deux exigences integrees le meme jour : la veille nocturne automatique
 (section 1) et les criteres 9 et 10 (lisibilite humaine, notes lues).
 
+**Amendement du 6 septembre au soir, decide par Vincent** (sur conseil de
+son ami informaticien) : **YouTube d'abord, en entier ; les autres reseaux
+quand YouTube marche bien.** Le critere 6 (TikTok) est reporte a la version
+suivante — il reste au contrat, il n'est simplement plus dans la v1.
+« YouTube marche bien » = les criteres 1 a 5 et 7 a 11 tenus sur YouTube,
+boucle complete : facteur nocturne -> detection -> pre-tri de Claude ->
+classeur A_JUGER -> verdicts de Vincent qui nourrissent le dictionnaire.
+
 Ce fichier est le seul juge de la phrase « j'ai construit un outil, il marche ».
 Claude n'a pas le droit de la prononcer autrement qu'en citant les criteres
 ci-dessous, chacun avec son nombre et le fichier de `recherche/` qui le prouve.
