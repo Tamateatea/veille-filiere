@@ -97,7 +97,11 @@ def entites_interprofessions():
 def deja_jugees():
     """Les paires (video_id, entite) deja tranchees par Vincent."""
     paires = set()
-    for chemin in DOSSIER_RECHERCHE.glob("jugements_reference_*.csv"):
+    chemins = list(DOSSIER_RECHERCHE.glob("jugements_reference_*.csv"))
+    recoltes = RACINE / "donnees" / "jugements_recoltes.csv"
+    if recoltes.exists():
+        chemins.append(recoltes)
+    for chemin in chemins:
         with open(chemin, encoding="utf-8-sig") as f:
             for j in csv.DictReader(f):
                 for e in j["entite"].split("|"):
@@ -106,19 +110,44 @@ def deja_jugees():
 
 
 def verdicts_existants():
-    """Compte les verdicts deja saisis dans un A_JUGER.xlsx existant."""
+    """Compte les verdicts saisis dans A_JUGER.xlsx et PAS ENCORE recoltes.
+
+    Un classeur entierement recolte (par relire_jugements.py) peut etre
+    regenere sans perte ; seuls des verdicts non recoltes bloquent.
+    """
     if not CHEMIN_CLASSEUR.exists():
         return 0
-    wb = openpyxl.load_workbook(CHEMIN_CLASSEUR, read_only=True, data_only=True)
+    recoltes = set()
+    chemin_recoltes = RACINE / "donnees" / "jugements_recoltes.csv"
+    if chemin_recoltes.exists():
+        with open(chemin_recoltes, encoding="utf-8-sig") as f:
+            recoltes = {(j["video_id"], normaliser(j["entite"]),
+                         normaliser(j["verdict"]))
+                        for j in csv.DictReader(f)}
+    wb = openpyxl.load_workbook(CHEMIN_CLASSEUR, data_only=True)
     n = 0
     if "a juger" in wb.sheetnames:
-        lignes = list(wb["a juger"].iter_rows(values_only=True))
-        if lignes:
-            entetes = [str(c or "") for c in lignes[0]]
-            if "TON VERDICT" in entetes:
-                i = entetes.index("TON VERDICT")
-                n = sum(1 for l in lignes[1:]
-                        if i < len(l) and l[i] and str(l[i]).strip())
+        ws = wb["a juger"]
+        lignes = list(ws.iter_rows(values_only=True))
+        entetes = [str(c or "") for c in lignes[0]] if lignes else []
+        if "TON VERDICT" in entetes:
+            i_v = entetes.index("TON VERDICT")
+            i_e = entetes.index("Entite possible")
+            for rang, l in enumerate(lignes[1:], start=2):
+                verdict = l[i_v] if i_v < len(l) else None
+                if not verdict or not str(verdict).strip():
+                    continue
+                url = ""
+                for cellule in ws[rang]:
+                    if cellule.hyperlink and cellule.hyperlink.target:
+                        url = cellule.hyperlink.target
+                        break
+                video_id = (url.split("watch?v=")[1].split("&")[0]
+                            if "watch?v=" in url else "")
+                cle = (video_id, normaliser(l[i_e] or ""),
+                       normaliser(verdict))
+                if cle not in recoltes:
+                    n += 1
     wb.close()
     return n
 
@@ -132,6 +161,31 @@ def principal():
 
     with open(CHEMIN_DETECTIONS, encoding="utf-8-sig") as f:
         detections = list(csv.DictReader(f))
+
+    # Les detections des tournees du facteur (base SQLite) rejoignent le
+    # meme circuit que celles du corpus gele.
+    import sqlite3
+    chemin_base = RACINE / "donnees" / "veille.sqlite"
+    if chemin_base.exists():
+        base = sqlite3.connect(chemin_base)
+        deja = {(d["video_id"], normaliser(d["entite"])) for d in detections}
+        for r in base.execute(
+                "SELECT d.video_id, c.nom, c.abonnes, v.publiee, v.titre, "
+                "v.url, d.entite, d.signaux, d.types_signaux, d.force, "
+                "d.indices_commerciaux, d.extrait "
+                "FROM detections d "
+                "JOIN videos v ON v.video_id = d.video_id "
+                "JOIN comptes c ON c.compte_id = v.compte_id"):
+            if (r[0], normaliser(r[6])) in deja:
+                continue
+            detections.append({
+                "video_id": r[0], "chaine": r[1] or "", "abonnes": r[2] or 0,
+                "publiee": r[3] or "", "titre": r[4] or "", "url": r[5] or "",
+                "entite": r[6], "signaux": r[7] or "",
+                "types_signaux": r[8] or "", "force": r[9] or "faible",
+                "indices_commerciaux": r[10] or "", "extrait": r[11] or "",
+            })
+        base.close()
 
     jugees = deja_jugees()
     candidates = []
