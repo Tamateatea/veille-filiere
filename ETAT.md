@@ -105,21 +105,34 @@ pre-trie avec raison -> Vincent tranche sur les cas non evidents.
   `recherche/facteur_2026-09-06_1708.md`) ; premiere tournee complete
   lancee le 06/09 au soir.
 
-## Prochaine etape — YOUTUBE D'ABORD
+## La boucle YouTube est complete (06/09 au soir)
 
-Decision de Vincent du 06/09 au soir (conseil de son ami, amendement au
-contrat) : finir YouTube avant d'ouvrir un autre reseau.
+Tout ce qui suit est fait et commite :
 
-5. **Le flux decouverte** (contenus_vitrines.csv, 2 916 videos) : en sortir
-   des noms de createurs a proposer — c'est le canal a haut rendement.
-6. **Generer A_JUGER depuis la base** au fil de l'eau (les nouvelles
-   detections du facteur, pre-triees par Claude).
-7. **Le second rideau** : transcriptions des comptes deja suspects
-   (81 % / 49 % mesures par l'archive, a re-deriver avant usage).
-8. Canal marque par @comptes et hashtags officiels (collecte de Vincent).
+- **`MODELE_DE_SORTIE.md`** : le schema public defini AVANT l'outil
+  (conseil de la soeur de Vincent et de son ami — penser depuis la sortie).
+- **Tables de sortie construites** depuis les 84 verdicts humains :
+  16 createurs, 16 comptes, 84 collaborations (64 CNIEL, 17 INTERBEV,
+  2 INAPORC, 1 ANVOL). `donnees/sortie/`, RIEN N'EST PUBLIE.
+  MESURE : `recherche/dossiers_2026-09-06.md`.
+- **`rescanner_base.py`** : tout changement du dictionnaire est desormais
+  retroactif sur toute la base (53 208 videos en quelques secondes).
+- **A_JUGER branche sur la base** : corpus + tournees nocturnes, meme
+  circuit, pre-tri de Claude.
+- **CHAUD ! retire de la detection** (0 vrai, 3+ faux juges).
+- **Etat stationnaire : 1 paire a juger** — Nico d'Estais x Nestle France,
+  pre-triee « collaboration remuneree » (« Merci a nos partenaires…
+  @nestleenfrance »). Premiere prise du canal marque par @compte.
 
-REPORTE apres YouTube : TikTok (critere 6 du contrat), Instagram (jeton
-Meta).
+## Prochaine etape — YOUTUBE D'ABORD (amendement au contrat)
+
+7. **Le second rideau** : transcriptions des comptes deja suspects.
+8. **Canal marque par @comptes et hashtags officiels** : enrichir le
+   dictionnaire avec les comptes officiels des 52 marques (collecte
+   possible par Vincent, ou par les pages publiques).
+9. Confirmer un a un les 47 signaux `propose` utiles.
+
+REPORTE apres YouTube : TikTok (critere 6), Instagram (jeton Meta).
 
 ## Decisions appliquees le 06/09 au soir
 
