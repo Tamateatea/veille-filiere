@@ -7,6 +7,7 @@ presents. Aucun chiffre repris d'un document.
 **Total des lignes soumises a jugement : 481**
 **Total des verdicts rendus : 391**
 **Verdicts accompagnes d'un commentaire : 258**
+**Verdicts relies a un identifiant video : 391**
 
 | Fichier / feuille | Lignes | Jugees | Detail des verdicts |
 |---|---:|---:|---|

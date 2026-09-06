@@ -46,7 +46,9 @@ def trouver_colonne(entetes, *mots):
 def lire_classeur(chemin):
     """Rend la liste des jugements du classeur, feuille par feuille."""
     lignes = []
-    wb = openpyxl.load_workbook(chemin, read_only=True, data_only=True)
+    # Pas de mode read_only : il ne donne pas acces aux hyperliens, or la
+    # colonne « Regarder » cache l'URL de la video derriere le mot « ouvrir ».
+    wb = openpyxl.load_workbook(chemin, data_only=True)
     for feuille in wb.worksheets:
         # L'entete n'est pas toujours en ligne 1 : certains classeurs
         # commencent par un mode d'emploi. On cherche la premiere ligne
@@ -90,10 +92,21 @@ def lire_classeur(chemin):
                     return v.date().isoformat()
                 return str(v).strip()
 
+            url = ""
+            for cellule in feuille[rang]:
+                if cellule.hyperlink and cellule.hyperlink.target:
+                    url = cellule.hyperlink.target
+                    break
+            video_id = ""
+            if "watch?v=" in url:
+                video_id = url.split("watch?v=")[1].split("&")[0]
+
             lignes.append({
                 "fichier": chemin.name,
                 "feuille": feuille.title,
                 "rang": rang,
+                "video_id": video_id,
+                "url": url,
                 "chaine": valeur("chaine"),
                 "abonnes": valeur("abonnes"),
                 "date": valeur("date"),
@@ -118,8 +131,9 @@ def principal():
 
     chemin_csv = DOSSIER_RECHERCHE / f"jugements_reference_{horodatage}.csv"
     with open(chemin_csv, "w", newline="", encoding="utf-8-sig") as f:
-        champs = ["fichier", "feuille", "rang", "chaine", "abonnes", "date",
-                  "entite", "titre", "verdict", "commentaire"]
+        champs = ["fichier", "feuille", "rang", "video_id", "url", "chaine",
+                  "abonnes", "date", "entite", "titre", "verdict",
+                  "commentaire"]
         ecrivain = csv.DictWriter(f, fieldnames=champs)
         ecrivain.writeheader()
         ecrivain.writerows(jugees)
@@ -145,7 +159,9 @@ def principal():
         f.write("presents. Aucun chiffre repris d'un document.\n\n")
         f.write(f"**Total des lignes soumises a jugement : {len(toutes)}**\n")
         f.write(f"**Total des verdicts rendus : {len(jugees)}**\n")
-        f.write(f"**Verdicts accompagnes d'un commentaire : {commentaires}**\n\n")
+        f.write(f"**Verdicts accompagnes d'un commentaire : {commentaires}**\n")
+        avec_id = sum(1 for l in jugees if l["video_id"])
+        f.write(f"**Verdicts relies a un identifiant video : {avec_id}**\n\n")
         f.write("| Fichier / feuille | Lignes | Jugees | Detail des verdicts |\n")
         f.write("|---|---:|---:|---|\n")
         for cle, d in sorted(par_fichier.items()):
