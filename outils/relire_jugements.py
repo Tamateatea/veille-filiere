@@ -88,7 +88,11 @@ def principal():
     for r in recoltes:
         if r["verdict"]:
             verdicts[r["verdict"]] = verdicts.get(r["verdict"], 0) + 1
-    notes = [r for r in recoltes if r["commentaire"]]
+    # Une mention de provenance (« valide par Vincent sur pre-tri Claude »)
+    # n'est pas une note a repondre : on ne liste que les vrais commentaires.
+    notes = [r for r in recoltes
+             if r["commentaire"]
+             and not r["commentaire"].startswith("valide par Vincent sur pre-tri")]
 
     with open(chemin_rapport, "w", encoding="utf-8") as f:
         f.write(f"# Recolte des jugements — {aujourd_hui}\n\n")

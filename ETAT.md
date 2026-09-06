@@ -65,16 +65,44 @@ recoltee par `outils/relire_jugements.py`, qui liste chaque note et exige
 une reponse (critere 10) ; le generateur refuse d'ecraser un classeur
 contenant des verdicts non recoltes.
 
+## Le lot de validation est juge — et il recadre tout
+
+48 verdicts (5 directs de Vincent, 43 pre-tries par Claude et valides en
+bloc par lui le 06/09). MESURE, `recherche/validation_lot1_2026-09-06.md` :
+
+| Canal | Precision de R3 sur du neuf | Rappel |
+|---|---:|---:|
+| interprofession | **42 %** (5/12) | 100 % |
+| **marque (noms en texte libre)** | **0 %** (0/27) | — |
+
+Le 94 % du banc historique ne generalise pas au residu jamais juge : les
+bons candidats interprofession avaient deja ete absorbes par les 391
+jugements, le reste est enrichi en bruit. Et le canal marque par nom nu
+(« Societe », « Marie », « President ») est du bruit pur sur ce lot.
+
+Corrections mesurees du 06/09 : indices commerciaux a moins de 500
+caracteres du signal ; CHAUD !, #Viande, #Elevage, Made in Viande,
+Naturellement Flexitariens et #EnjoyItsFromEurope descendus en faible.
+Banc historique apres corrections : R3 a 94 % / 79 %.
+
+Le pre-tri par Claude est valide comme mecanisme : 43 lignes triees, zero
+desaccord de Vincent. Le protocole devient : l'outil detecte -> Claude
+pre-trie avec raison -> Vincent tranche sur les cas non evidents.
+
 ## Prochaine etape
 
 4. **Le facteur** : la veille incrementale nocturne (critere 1), stockage
    SQLite a construire a cette occasion.
 5. **TikTok** : rattacher les partenariats labellises aux commanditaires via
    hashtags (critere 6).
+6. **Le flux decouverte** (contenus_vitrines.csv, 2 916 videos) : en sortir
+   des noms de createurs a proposer — c'est le canal a haut rendement.
 
 ## Interventions attendues de Vincent
 
-1. **Juger `A_JUGER.xlsx`** (48 lignes) — c'est ce qui etablira les vrais
-   chiffres de R3 et la premiere mesure du canal marque.
-2. **Ratifier le routage vitrine** (decision 1 ci-dessus).
+1. **Decision D-marques : que faire des noms de marque en texte libre ?**
+   MESURE : 0/27 sur le lot neuf. Proposition : les sortir de la detection
+   (statut propose) jusqu'a une regle plus fine ; le canal marque passerait
+   par les @comptes et hashtags de marques, a collecter.
+2. **Ratifier le routage vitrine** (toujours en attente).
 3. Plus tard : le jeton Meta quand il decidera.
