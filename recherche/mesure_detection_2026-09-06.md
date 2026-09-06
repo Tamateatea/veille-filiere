@@ -22,6 +22,18 @@ Reference : `jugements_reference_2026-09-06.csv` (248 paires mesurables, 20 « j
 
 | | |
 |---|---:|
+| Retenues par la regle | 61 |
+| dont vraies (VP) | 57 |
+| dont fausses (FP) | 4 |
+| Vraies manquees (FN) | 16 |
+| Fausses ecartees (VN) | 171 |
+| **Precision** | **93 %** |
+| **Rappel** | **78 %** |
+
+## R3 signal fort, ou faible + indice
+
+| | |
+|---|---:|
 | Retenues par la regle | 62 |
 | dont vraies (VP) | 58 |
 | dont fausses (FP) | 4 |
@@ -29,18 +41,6 @@ Reference : `jugements_reference_2026-09-06.csv` (248 paires mesurables, 20 « j
 | Fausses ecartees (VN) | 171 |
 | **Precision** | **94 %** |
 | **Rappel** | **79 %** |
-
-## R3 signal fort, ou faible + indice
-
-| | |
-|---|---:|
-| Retenues par la regle | 63 |
-| dont vraies (VP) | 59 |
-| dont fausses (FP) | 4 |
-| Vraies manquees (FN) | 14 |
-| Fausses ecartees (VN) | 171 |
-| **Precision** | **94 %** |
-| **Rappel** | **81 %** |
 
 ## Rappel par entite (R1)
 

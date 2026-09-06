@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Le detecteur : cherche les signaux du dictionnaire dans le corpus gele.
 
 Entrees :
@@ -43,8 +43,13 @@ DOSSIER_RECHERCHE = RACINE / "recherche"
 TYPES_CANAUX = {"chaine YouTube", "chaine YouTube regionale",
                 "compte vitrine", "compte de marque"}
 
-# Vocabulaire commercial : la presence d'un de ces motifs a cote d'un signal
-# est l'indice que la mention est une collaboration, pas une conversation.
+# Vocabulaire commercial : la presence d'un de ces motifs A PROXIMITE d'un
+# signal est l'indice que la mention est une collaboration, pas une
+# conversation. La proximite est obligatoire depuis le 06/09 : un « merci a »
+# adresse a un autre annonceur, a 2 000 caracteres du signal, faisait retenir
+# des credits d'equipe (faux positif SQUEEZIE/Marie juge par Vincent).
+PORTEE_INDICE = 500  # caracteres entre le signal et l'indice
+
 INDICATEURS = {
     "remerciement": r"merci\s+(a|au|aux)\b",
     "partenariat": r"\bpartenari|\bpartenaire",
@@ -161,9 +166,16 @@ def principal():
             })
             continue
         norme = normaliser_positionnel(texte)
-        indices = sorted(nom for nom, motif in INDICATEURS.items()
-                         if re.search(motif, norme))
+        occurrences_indices = [
+            (nom, m.start())
+            for nom, motif in INDICATEURS.items()
+            for m in re.finditer(motif, norme)
+        ]
         for entite, hits in detecter_dans(texte, signaux).items():
+            indices = sorted({
+                nom for nom, pos in occurrences_indices
+                if any(abs(pos - p) <= PORTEE_INDICE for _, p in hits)
+            })
             noms = sorted({s["texte"] for s, _ in hits})
             types = sorted({s["type_signal"] for s, _ in hits if s["type_signal"]})
             force = ("fort" if any(s["force"] == "fort" for s, _ in hits)

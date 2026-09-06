@@ -3,7 +3,7 @@
 Produit par `outils/detecter.py`. Corpus : les 27353 videos candidates conservees dans `moisson_videos.json` (cle `touchees`). Dictionnaire : 119 signaux `confirme`, 2 temoins.
 
 **Paires (video, entite) detectees : 3736**
-**dont avec au moins un indice commercial : 778**
+**dont avec au moins un indice commercial : 721**
 **Videos publiees par un canal vitrine, routees vers la decouverte : 149** (`donnees/contenus_vitrines.csv`)
 
 ## Par entite
