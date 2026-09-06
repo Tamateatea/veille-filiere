@@ -1,6 +1,30 @@
 # Etat — veille-filiere
 
-Mis a jour le **6 septembre 2026**.
+Mis a jour le **6 septembre 2026, fin de soiree** (fermeture de session).
+
+## REPRENDRE ICI
+
+**Une seule decision est en attente de Vincent** : la confirmation des
+signaux evalues (MESURE, `recherche/evaluation_signaux_proposes_2026-09-06.csv`) —
+« les 6 » (fort, adosses a ses verdicts), « les 23 » (fort + faible,
+recommandation de Claude : c'est la que sont Doigby x Babybel, Kameto x
+Yoplait, McFly & Carlito x Danette…), ou « attends ».
+Des sa reponse : activer les signaux -> `rescanner_base.py` -> les
+candidats arrivent pre-tries dans A_JUGER.
+
+**Ensuite, dans l'ordre :**
+1. Integrer les 29 chaines officielles de marques trouvees
+   (`recherche/comptes_marques_2026-09-06.csv`) : vitrines a surveiller
+   + comptes au dictionnaire (confirmation de Vincent, critere 11).
+2. Marquer « rejete » les 46 signaux mesures comme bruit (avec l'accord
+   de Vincent).
+3. Le facteur tourne SEUL chaque nuit a 3h (tache planifiee Windows) :
+   ouvrir le dernier `recherche/facteur_*.md` au matin.
+
+**Protocole etabli et valide par Vincent** : l'outil detecte -> Claude
+pre-trie chaque ligne avec raison -> Vincent tranche (les evidences en
+bloc, les douteux un par un). Ses notes sont recoltees et repondues
+(critere 10).
 
 ## Ou on en est
 
