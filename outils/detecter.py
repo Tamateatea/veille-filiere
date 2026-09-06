@@ -176,6 +176,7 @@ def principal():
                 "chaine": v.get("chaine", ""),
                 "abonnes": v.get("abonnes", ""),
                 "publiee": v.get("publiee", ""),
+                "titre": v.get("titre", ""),
                 "url": v.get("url", ""),
                 "entite": entite,
                 "signaux": " | ".join(noms),
@@ -190,9 +191,9 @@ def principal():
 
     CHEMIN_DETECTIONS.parent.mkdir(exist_ok=True)
     with open(CHEMIN_DETECTIONS, "w", newline="", encoding="utf-8-sig") as f:
-        champs = ["video_id", "chaine", "abonnes", "publiee", "url", "entite",
-                  "signaux", "types_signaux", "force", "indices_commerciaux",
-                  "extrait"]
+        champs = ["video_id", "chaine", "abonnes", "publiee", "titre", "url",
+                  "entite", "signaux", "types_signaux", "force",
+                  "indices_commerciaux", "extrait"]
         w = csv.DictWriter(f, fieldnames=champs)
         w.writeheader()
         w.writerows(detections)

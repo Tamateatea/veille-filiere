@@ -52,17 +52,29 @@ Deux decisions de conception, prises en analysant les desaccords :
 jeu** : chiffres optimistes, a confirmer sur un lot neuf de jugements
 (critere 6). Ne pas declarer les criteres 2 et 3 atteints avant ca.
 
+## Le classeur de verification existe : `A_JUGER.xlsx`
+
+Genere le 06/09 (MESURE, `recherche/a_juger_2026-09-06.md`) : **48 paires**
+tirees au hasard parmi les 722 retenues par R3 et jamais jugees —
+**18 interprofession** (tout ce qui reste : elles valideront les 94 % / 81 %
+sur du neuf) et **30 marque** (la premiere mesure du canal marque, D3).
+
+Garanties integrees : l'extrait contient toujours son signal (verifie a la
+generation, qui echoue sinon — critere 9) ; la colonne commentaire est
+recoltee par `outils/relire_jugements.py`, qui liste chaque note et exige
+une reponse (critere 10) ; le generateur refuse d'ecraser un classeur
+contenant des verdicts non recoltes.
+
 ## Prochaine etape
 
-3. **Le classeur de verification** lisible (criteres 9, 10) — genere depuis
-   `donnees/detections.csv`, en commencant par les paires R3 non encore
-   jugees.
-4. **Le facteur** : la veille incrementale nocturne (critere 1).
+4. **Le facteur** : la veille incrementale nocturne (critere 1), stockage
+   SQLite a construire a cette occasion.
 5. **TikTok** : rattacher les partenariats labellises aux commanditaires via
-   hashtags (critere 6) — produira le lot de ~50 cas pour Vincent.
+   hashtags (critere 6).
 
 ## Interventions attendues de Vincent
 
-1. **Ratifier le routage vitrine** (decision 1 ci-dessus).
-2. Plus tard : un lot de ~50 cas a juger (critere 6, et validation de R3
-   sur du neuf), et le jeton Meta quand il decidera.
+1. **Juger `A_JUGER.xlsx`** (48 lignes) — c'est ce qui etablira les vrais
+   chiffres de R3 et la premiere mesure du canal marque.
+2. **Ratifier le routage vitrine** (decision 1 ci-dessus).
+3. Plus tard : le jeton Meta quand il decidera.
