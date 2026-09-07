@@ -30,6 +30,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -44,6 +45,8 @@ CHEMIN_RECOLTES = RACINE / "donnees" / "jugements_recoltes.csv"
 FICHIERS_ACQUIS = ["transcriptions.json", "transcriptions_second_rideau.json",
                    "transcriptions_temoins.json"]
 DELAI = 180
+PAUSE = 4.0            # secondes entre deux videos (politesse, evite le 429)
+PAUSE_APRES_429 = 90.0  # attente avant de reessayer quand YouTube freine
 
 
 def preparer_table(base):
@@ -139,7 +142,9 @@ def principal():
     vitrines = canaux_vitrines_depuis(signaux)
     colonnes = [c[1] for c in base.execute("PRAGMA table_info(comptes)")]
     col_vitrine = "c.entite_vitrine" if "entite_vitrine" in colonnes else "NULL"
-    deja = {r[0] for r in base.execute("SELECT video_id FROM transcriptions")}
+    # Les echecs (souvent un 429 passager) sont retentes a chaque passage.
+    deja = {r[0] for r in base.execute(
+        "SELECT video_id FROM transcriptions WHERE statut <> 'echec'")}
     cibles = []
     for vid, nom, ev in base.execute(
             f"SELECT DISTINCT v.video_id, c.nom, {col_vitrine} FROM videos v "
@@ -162,13 +167,27 @@ def principal():
         maintenant = dt.datetime.now().isoformat(timespec="seconds")
         try:
             langue, lignes = sous_titres(vid)
-        except (RuntimeError, subprocess.TimeoutExpired, OSError):
-            statut, langue, lignes = "echec", None, []
-            echecs += 1
+        except (RuntimeError, subprocess.TimeoutExpired, OSError) as erreur:
+            if "429" in str(erreur):
+                # YouTube freine : on attend, puis on reessaie une fois.
+                # (Mesure du 07/09 : sans pause, 11 echecs 429 sur 20.)
+                time.sleep(PAUSE_APRES_429)
+                try:
+                    langue, lignes = sous_titres(vid)
+                    statut = "ok" if lignes else "aucune"
+                    ok += bool(lignes)
+                    aucune += not lignes
+                except (RuntimeError, subprocess.TimeoutExpired, OSError):
+                    statut, langue, lignes = "echec", None, []
+                    echecs += 1
+            else:
+                statut, langue, lignes = "echec", None, []
+                echecs += 1
         else:
             statut = "ok" if lignes else "aucune"
             ok += bool(lignes)
             aucune += not lignes
+        time.sleep(PAUSE)
         with base:
             base.execute(
                 "INSERT OR REPLACE INTO transcriptions (video_id, langue, "
