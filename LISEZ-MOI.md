@@ -5,7 +5,8 @@ contenu et les filieres viande, lait et oeufs. Fonde le 6 septembre 2026, en
 reprise propre du projet `InfluencersxMeat&MilkLobbyTracker` (conserve comme
 archive, plus jamais modifie).
 
-**Le document maitre est `CONTRAT.md`** : il definit ce que « l'outil marche »
+**`CLAUDE.md` dit comment on travaille a deux** (lu automatiquement par
+Claude a chaque seance). **Le document maitre est `CONTRAT.md`** : il definit ce que « l'outil marche »
 veut dire, en onze criteres verifiables par Vincent sans lire de code. Rien ne
 se declare fini autrement qu'en citant ces criteres.
 

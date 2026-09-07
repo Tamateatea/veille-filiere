@@ -2,7 +2,58 @@
 
 Mis a jour le **7 septembre 2026 au soir**.
 
-## REPRENDRE ICI
+## REPRENDRE ICI — 8 septembre 2026
+
+Consignes de travail : `CLAUDE.md` (lu automatiquement). Fil conducteur :
+trois axes — createurs connus, nouveaux createurs, nouveaux lobbies /
+vitrines / campagnes — YouTube d'abord.
+
+**1. Verifier d'abord ce qui a tourne pendant la nuit du 7 au 8 :**
+
+| Quoi | Ou regarder | Ce qu'on attend |
+|---|---|---|
+| Tournee de nuit (3h) | dernier `recherche/facteur_*.md` | ~300-500 videos nouvelles, detections eventuelles |
+| Relecture des 13 644 descriptions tronquees (processus detache lance 07/09 22h20) | `recherche/completion_videos_*.md` ; en base `description_complete_le` | rapport a la fin ; si absent, relancer `outils/completer_videos.py --tronquees` (idempotent) |
+| Transcription des candidates + jugees (processus detache relance 07/09 23h15, pause 4 s) | `recherche/transcription_*.md` ; table `transcriptions` | rapport a la fin ; les echecs 429 se retentent en relancant `outils/transcrire.py --jugees` |
+
+Puis : `python outils/rescanner_base.py` (descriptions allongees ->
+signaux nouveaux), `python outils/generer_a_juger.py`, pre-tri, et dire a
+Vincent en deux phrases ce qui s'est passe.
+
+**2. Etat de l'outil (MESURE, fichiers du 07/09) :**
+
+- 95 collaborations confirmees, 22 createurs (`recherche/dossiers_2026-09-07.md`).
+- Regle R3 sur les videos jugees avec description complete, vitrines
+  ecartees : precision 82 %, rappel 91 % (`recherche/mesure_declaration_2026-09-07.md`).
+  Le banc interprofession historique : 94 % / 79 %. Le lot neuf du 06/09 :
+  42 %. Le lot du 07/09 : 9 collaborations sur 13 apres verification.
+- Gisement a juger : 0 (etat stationnaire, tout depend des tournees de
+  nuit et de l'elargissement).
+- 88 signaux actifs, 2 903 comptes surveilles (dont 4 disparus, HTTP 404,
+  proposes au retrait par le rapport du facteur).
+
+**3. Programme de la seance, convenu avec Vincent le 07/09 :**
+
+1. **Historique complet des chaines ajoutees** via le quota API gratuit
+   (10 000 unites/jour, inutilise ; ~1 unite par 50 videos). Cle API : a
+   retrouver dans l'ancien projet (`SECRETS.txt` de l'archive OneDrive,
+   ne jamais la commiter). Mesurer ce que ca ajoute.
+2. **Recherches quotidiennes** par mots du dictionnaire (100 unites par
+   recherche) pour trouver des chaines hors liste. Proposer, mesurer.
+3. **Mesurer la transcription** sur les jugees transcrites
+   (`outils/second_rideau.py` lit la table) : trois nombres.
+4. **Question ouverte a poser une fois** : surveiller les 30 chaines
+   officielles de marques (`outils/integrer_comptes_marques.py`, simule ;
+   `--appliquer` apres son oui).
+
+**4. Ce que Vincent aura a faire :** probablement un classeur a juger si
+les descriptions completes ou la nuit apportent des candidats. Rien
+d'autre. Toute tache lui est dite dans le chat, avec les etapes.
+
+**Protocole valide** : l'outil detecte -> Claude pre-trie chaque ligne avec
+raison -> Vincent tranche. Ses notes sont recoltees, verifiees, repondues.
+
+## Session du 7 septembre 2026 (recit detaille)
 
 **Session du 07/09 au soir, avec Vincent.** Il a dit « go » : 22 signaux
 confirmes, 45 rejetes (`recherche/activation_signaux_2026-09-07.md`),
