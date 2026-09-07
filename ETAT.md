@@ -41,6 +41,28 @@ affichee pour l'humain.** Sur cette population (toutes entites,
 descriptions completes), R3 tient les seuils du contrat — voir les
 nombres exacts dans le fichier.
 
+**Transcription adoptee (decision de Vincent, 07/09 vers 23h)** : partout
+ou elle renforce la certitude, sur les candidates seulement.
+`outils/transcrire.py` (yt-dlp, sous-titres automatiques, ~7 s/video,
+zero quota) range tout dans la table `transcriptions` de la base (571
+heritees migrees) ; lance en tache detachee sur candidates + jugees.
+A_JUGER a une colonne de plus, « Dit dans la video (passage) », avec
+minutage (verdict en M, commentaire en N). `second_rideau.py` lit la
+table. Exemple : Angelica x Actimel, description vide, la transcription
+dit « il te faudra un Actimel vide lave avec de l'eau » (moule a gateau,
+pas un partenariat).
+
+**Fil conducteur fixe par Vincent** : maximiser la puissance sur trois
+axes — createurs connus, nouveaux createurs, nouveaux lobbies / vitrines /
+campagnes — YouTube d'abord.
+
+**Prochaine seance, accord de Vincent** : (1) le quota API gratuit
+(10 000 unites/jour, inutilise) pour charger l'historique complet des
+chaines ajoutees ; (2) des recherches quotidiennes par mots du
+dictionnaire pour trouver des chaines hors liste ; (3) MESURER la
+transcription sur les jugees une fois transcrites (`second_rideau.py`).
+Question toujours ouverte : les 30 chaines officielles de marques.
+
 **Fait ensuite :**
 `python outils/rescanner_base.py` (descriptions allongees -> signaux
 nouveaux), `python outils/generer_a_juger.py` (+ pre-tri), et MESURER la

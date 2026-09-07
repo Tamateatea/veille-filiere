@@ -35,7 +35,8 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.worksheet.datavalidation import DataValidation
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from detecter import INDICATEURS, PORTEE_INDICE, normaliser_positionnel  # noqa: E402
+from detecter import INDICATEURS, PORTEE_INDICE, charger_signaux, \
+    normaliser_positionnel  # noqa: E402
 
 RACINE = Path(__file__).resolve().parent.parent
 CHEMIN_DETECTIONS = RACINE / "donnees" / "detections.csv"
@@ -71,6 +72,10 @@ Deux colonnes t'aident a trancher sans ouvrir la video :
   « Mention commerciale (passage) »   le bout de description qui porte
       un mot comme « partenariat », « sponsorise », « collaboration
       commerciale », quand il est loin du signal (souvent tout en bas).
+  « Dit dans la video (passage) »     ce que le createur DIT, d'apres les
+      sous-titres automatiques, autour du nom du commanditaire ou d'un
+      mot commercial, avec le minutage. Utile quand la description est
+      vide ou douteuse. Les sous-titres automatiques font des fautes.
 
 TON VERDICT — choisis dans la liste deroulante :
   collaboration remuneree      le createur est paye par ce commanditaire
@@ -126,6 +131,57 @@ def passage_commercial(description, signaux, extrait):
     prefixe = "…" if debut > 100 else ""
     suffixe = "…" if fin + 100 < len(description) else ""
     return prefixe + morceau.replace("\n", " ⏎ ") + suffixe
+
+
+def passage_oral(base, video_id, entite_signaux, signaux):
+    """Ce qui est DIT dans la video autour du signal ou d'un mot commercial.
+
+    Decision de Vincent (07/09) : la transcription renforce la certitude
+    quand la description est vide ou douteuse. On cherche d'abord un signal
+    de l'entite dans la transcription, sinon un mot commercial ; on affiche
+    le passage avec son minutage. Rend "" si pas de transcription.
+    """
+    tables = {r[0] for r in base.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table'")}
+    if "transcriptions" not in tables:
+        return ""
+    r = base.execute("SELECT statut, texte, segments FROM transcriptions "
+                     "WHERE video_id = ?", (video_id,)).fetchone()
+    if not r:
+        return "(pas encore transcrite)"
+    statut, texte, segments = r
+    if statut != "ok" or not texte:
+        return "(pas de sous-titres disponibles)"
+    norme = normaliser_positionnel(texte)
+    motifs = [s["regex"] for s in signaux
+              if normaliser(s["entite"]) == normaliser(entite_signaux)]
+    position = None
+    for motif in motifs:
+        m = motif.search(norme)
+        if m:
+            position = m.start()
+            break
+    etiquette = "signal entendu"
+    if position is None:
+        for nom, motif in INDICATEURS.items():
+            m = re.search(motif, norme)
+            if m:
+                position = m.start()
+                etiquette = "mot commercial entendu"
+                break
+    if position is None:
+        return "(transcrite : ni signal ni mot commercial entendu)"
+    morceau = texte[max(0, position - 150):position + 200].strip()
+    minutage = ""
+    if segments:
+        import json
+        cumul = 0
+        for seconde, ligne in json.loads(segments):
+            cumul += len(ligne) + 1
+            if cumul > position:
+                minutage = f"a {int(seconde) // 60}:{int(seconde) % 60:02d} — "
+                break
+    return f"{minutage}{etiquette} : « …{morceau}… »"
 
 
 def complements_depuis_base(base, video_id):
@@ -288,15 +344,16 @@ def principal():
     entetes = ["N", "Chaine", "Abonnes", "Date", "Entite possible",
                "Signaux reperes", "Titre de la video", "Regarder",
                "Extrait exact", "Case « communication commerciale »",
-               "Mention commerciale (passage)", "TON VERDICT",
-               "Ton commentaire"]
+               "Mention commerciale (passage)", "Dit dans la video (passage)",
+               "TON VERDICT", "Ton commentaire"]
     ws.append(entetes)
     for c in ws[1]:
         c.font = gras
     jaune = PatternFill("solid", fgColor="FFF2CC")
     vert = PatternFill("solid", fgColor="E2EFDA")
     base = sqlite3.connect(chemin_base) if chemin_base.exists() else None
-    n_cochees = n_passages = 0
+    signaux_actifs, _ = charger_signaux()
+    n_cochees = n_passages = n_oraux = 0
     for n, d in enumerate(lot, start=1):
         rang = n + 1
         ws.cell(rang, 1, n)
@@ -325,7 +382,13 @@ def principal():
             n_passages += 1
         cellule_passage = ws.cell(rang, 11, passage)
         cellule_passage.alignment = Alignment(wrap_text=True, vertical="top")
-        # cellules 12 et 13 : a Vincent
+        oral = (passage_oral(base, d["video_id"], d["entite"], signaux_actifs)
+                if base else "")
+        if oral and not oral.startswith("("):
+            n_oraux += 1
+        cellule_oral = ws.cell(rang, 12, oral)
+        cellule_oral.alignment = Alignment(wrap_text=True, vertical="top")
+        # cellules 13 et 14 : a Vincent
     if base:
         base.close()
 
@@ -334,10 +397,10 @@ def principal():
             type="list", formula1='"' + ",".join(VERDICTS) + '"',
             allow_blank=True, showDropDown=False)
         ws.add_data_validation(validation)
-        validation.add(f"L2:L{len(lot) + 1}")
+        validation.add(f"M2:M{len(lot) + 1}")
 
     largeurs = {"A": 4, "B": 22, "C": 11, "D": 11, "E": 16, "F": 26, "G": 40,
-                "H": 8, "I": 60, "J": 20, "K": 45, "L": 26, "M": 40}
+                "H": 8, "I": 60, "J": 20, "K": 45, "L": 45, "M": 26, "N": 40}
     for lettre, largeur in largeurs.items():
         ws.column_dimensions[lettre].width = largeur
     ws.freeze_panes = "A2"
@@ -371,7 +434,8 @@ def principal():
         f.write(f"| Lot stratifie (graine {GRAINE}) | {len(lot)} |\n")
         f.write(f"| Extraits verifies contenant leur signal | {len(lot)} / {len(lot)} |\n")
         f.write(f"| dont case « communication commerciale » cochee | {n_cochees} |\n")
-        f.write(f"| dont mention commerciale hors extrait, affichee | {n_passages} |\n\n")
+        f.write(f"| dont mention commerciale hors extrait, affichee | {n_passages} |\n")
+        f.write(f"| dont passage oral (transcription) affiche | {n_oraux} |\n\n")
         f.write("Moitie interprofession (valide les 94 % / 81 % de R3 sur du "
                 "neuf), moitie marque (premiere mesure du canal, decision "
                 "D3). Tirage aleatoire par canal ; affichage trie par "

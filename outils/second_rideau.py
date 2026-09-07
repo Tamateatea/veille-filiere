@@ -52,12 +52,27 @@ def normaliser(texte):
 
 
 def charger_transcriptions():
+    """Les transcriptions heritees (fichiers acquis) + celles de la base.
+
+    Depuis le 07/09, `outils/transcrire.py` range toute transcription dans
+    la table `transcriptions` de la base (les fichiers acquis y sont
+    migres). La table l'emporte quand elle existe.
+    """
     transcriptions = {}
     for nom in FICHIERS_TRANSCRIPTIONS:
         chemin = DOSSIER_ACQUIS / nom
         if chemin.exists():
             with open(chemin, encoding="utf-8") as f:
                 transcriptions.update(json.load(f))
+    base = sqlite3.connect(CHEMIN_BASE)
+    tables = {r[0] for r in base.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table'")}
+    if "transcriptions" in tables:
+        for vid, texte in base.execute(
+                "SELECT video_id, texte FROM transcriptions "
+                "WHERE statut = 'ok' AND texte IS NOT NULL"):
+            transcriptions[vid] = texte
+    base.close()
     return transcriptions
 
 
