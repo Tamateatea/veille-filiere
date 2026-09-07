@@ -31,7 +31,17 @@ Vincent a aussi tranche : **« Nos amis pour la vie »** a un homonyme (un
 sanctuaire animalier a Marrakech) ; Herta et Le Gaulois restent dans le
 perimetre tant qu'il ne les exclut pas.
 
-**A faire des que la completion a couvert les candidats et les jugees :**
+**Mesure faite le 07/09 a 23h** (`recherche/mesure_declaration_2026-09-07.md`,
+videos jugees relues, vitrines ecartees comme dans la detection) : la case
+cochee seule est precise a 92 % mais ne trouve que 39 % des
+collaborations ; ajoutee a R3 elle ne change rien (+1 vrai, +1 faux),
+parce que les videos cochees portent deja un signal et un mot commercial.
+**Decision : pas de changement de regle ; la case reste une information
+affichee pour l'humain.** Sur cette population (toutes entites,
+descriptions completes), R3 tient les seuils du contrat — voir les
+nombres exacts dans le fichier.
+
+**Fait ensuite :**
 `python outils/rescanner_base.py` (descriptions allongees -> signaux
 nouveaux), `python outils/generer_a_juger.py` (+ pre-tri), et MESURER la
 case cochee comme indice commercial (regle des trois nombres) avant de

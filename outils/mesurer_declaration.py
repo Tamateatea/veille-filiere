@@ -25,7 +25,8 @@ import unicodedata
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from detecter import analyser, charger_signaux  # noqa: E402
+from detecter import analyser, canaux_vitrines_depuis, charger_signaux, \
+    normaliser_positionnel  # noqa: E402
 
 RACINE = Path(__file__).resolve().parent.parent
 CHEMIN_BASE = RACINE / "donnees" / "veille.sqlite"
@@ -68,11 +69,27 @@ def mesure(retenues, verites):
 
 def principal():
     signaux, _ = charger_signaux()
+    vitrines = canaux_vitrines_depuis(signaux)
     verdicts = verdicts_humains()
     base = sqlite3.connect(CHEMIN_BASE)
-    videos = {r[0]: r for r in base.execute(
-        "SELECT video_id, titre, description, declaration_commerciale "
-        "FROM videos WHERE description_complete_le IS NOT NULL")}
+    colonnes = [c[1] for c in base.execute("PRAGMA table_info(comptes)")]
+    col_vitrine = ("c.entite_vitrine" if "entite_vitrine" in colonnes
+                   else "NULL")
+    # Les videos publiees par une vitrine (la chaine du lobby lui-meme) ne
+    # sont jamais soumises a l'humain : on les ecarte de la mesure comme le
+    # rescanner les ecarte de la detection. Sans ca, les 41 videos de la
+    # chaine « Produits Laitiers » jugees hors sujet comptaient en faux.
+    videos = {}
+    n_vitrines = 0
+    for r in base.execute(
+            "SELECT v.video_id, v.titre, v.description, "
+            f"v.declaration_commerciale, c.nom, {col_vitrine} "
+            "FROM videos v JOIN comptes c ON c.compte_id = v.compte_id "
+            "WHERE v.description_complete_le IS NOT NULL"):
+        if r[5] or normaliser_positionnel(r[4] or "").lstrip("@") in vitrines:
+            n_vitrines += 1
+            continue
+        videos[r[0]] = r[:4]
     base.close()
 
     # Les paires jugees dont la video est completee et le verdict tranche.
@@ -114,8 +131,9 @@ def principal():
         f.write("Produit par `outils/mesurer_declaration.py`. Paires jugees "
                 "par Vincent dont la video a ete completee depuis sa page "
                 f"publique : **{len(verites)}** (+{exclues} « je ne sais "
-                f"pas » exclues) ; videos avec la case cochee parmi elles : "
-                f"{n_cochees}.\n\n")
+                f"pas » exclues, {n_vitrines} videos de vitrines ecartees "
+                "comme dans la detection) ; videos avec la case cochee "
+                f"parmi elles : {n_cochees}.\n\n")
         f.write("| Regle | VP | FP | FN | Precision | Rappel |\n")
         f.write("|---|---:|---:|---:|---:|---:|\n")
         for nom, (vp, fp, fn, p, r) in resultats.items():
