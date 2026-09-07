@@ -4,19 +4,38 @@ Mis a jour le **7 septembre 2026 au soir**.
 
 ## REPRENDRE ICI
 
-**Decision prise le 07/09 a 22h : Vincent a dit « go ».** 22 signaux
-confirmes, 45 rejetes (MESURE, `recherche/activation_signaux_2026-09-07.md`),
-re-balayage complet fait (`recherche/rescan_2026-09-07_2200.md`, 220
-detections), et **`A_JUGER.xlsx` contient 13 lignes pre-triees** par Claude
-(colonnes L-N : verdict propose, certitude, raison) — 4 evidentes, 7
-probables, 2 a regarder (`recherche/a_juger_2026-09-07.md`).
+**Session du 07/09 au soir, avec Vincent.** Il a dit « go » : 22 signaux
+confirmes, 45 rejetes (`recherche/activation_signaux_2026-09-07.md`),
+re-balayage (`recherche/rescan_2026-09-07_2200.md`), 13 lignes pre-triees
+et **jugees par lui le soir meme** (`recherche/recolte_jugements_2026-09-07.md`,
+7 notes verifiees une a une et repondues — critere 10). Tables de sortie :
+**95 collaborations, 22 createurs** (`recherche/dossiers_2026-09-07.md`).
 
-**En attente : les verdicts de Vincent sur ces 13 lignes.** Des qu'il les a
-saisis : `python outils/relire_jugements.py` (recolte + reponse a ses
-notes), puis `python outils/construire_dossiers.py` (les tables de sortie).
+Ses notes ont revele deux defauts, corriges dans la foulee :
 
-La simulation qui a fonde la decision reste consultable :
-`recherche/simulation_activation_2026-09-07.md`.
+1. **Descriptions tronquees a 900 caracteres** pour 13 644 videos de
+   l'ancienne moisson : les mentions « collaboration commerciale » en fin
+   de description etaient invisibles (Encuisineaugustine x Le Gaulois).
+   `outils/completer_videos.py` relit la page publique (zero quota) et
+   enregistre la description entiere + la **case « Inclut une
+   communication commerciale »** (colonne `declaration_commerciale`).
+   Lance en tache detachee le 07/09 a 22h20 sur candidats + jugees +
+   tronquees (~14 000 pages, une seconde chacune) ; rapport
+   `recherche/completion_videos_*.md` a la fin.
+2. **Le classeur A_JUGER montre desormais** la case cochee et le passage
+   commercial de la description quand il est loin du signal (demande de
+   Vincent : rendre le travail de l'humain qui decide le plus facile
+   possible). Colonnes J et K ; verdict en L, commentaire en M.
+
+Vincent a aussi tranche : **« Nos amis pour la vie »** a un homonyme (un
+sanctuaire animalier a Marrakech) ; Herta et Le Gaulois restent dans le
+perimetre tant qu'il ne les exclut pas.
+
+**A faire des que la completion a couvert les candidats et les jugees :**
+`python outils/rescanner_base.py` (descriptions allongees -> signaux
+nouveaux), `python outils/generer_a_juger.py` (+ pre-tri), et MESURER la
+case cochee comme indice commercial (regle des trois nombres) avant de
+l'ajouter a R3.
 
 **Deuxieme confirmation attendue, preparee et simulee** (MESURE,
 `recherche/integration_comptes_marques_2026-09-07_simulation.md`) :

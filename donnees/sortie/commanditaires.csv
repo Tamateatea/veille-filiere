@@ -1,6 +1,8 @@
 ﻿commanditaire_id,nom,type,rattachement,produits
 interbev,INTERBEV,Interprofession,,Viande
 cniel,CNIEL,Interprofession,,Produits Laitiers
+babybel,Babybel,Marque,Groupe Bel,Produits Laitiers
+le-gaulois,Le Gaulois,Marque,LDC,Viande
 inaporc,INAPORC,Interprofession,,Viande
 anvol,ANVOL,Interprofession,,Viande
 actimel,Actimel,Marque,Danone,Produits Laitiers

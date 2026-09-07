@@ -25,6 +25,7 @@ verdict : le travail de Vincent ne s'ecrase jamais.
 import csv
 import datetime as dt
 import random
+import re
 import sys
 import unicodedata
 from pathlib import Path
@@ -32,6 +33,9 @@ from pathlib import Path
 import openpyxl
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.worksheet.datavalidation import DataValidation
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from detecter import INDICATEURS, PORTEE_INDICE, normaliser_positionnel  # noqa: E402
 
 RACINE = Path(__file__).resolve().parent.parent
 CHEMIN_DETECTIONS = RACINE / "donnees" / "detections.csv"
@@ -59,6 +63,15 @@ La colonne « Extrait exact » contient toujours le passage qui a declenche
 la detection — le signal repere y est forcement visible. Si l'extrait ne te
 suffit pas pour juger, clique « ouvrir » et regarde la video.
 
+Deux colonnes t'aident a trancher sans ouvrir la video :
+  « Case communication commerciale »  OUI = le createur a lui-meme coche
+      la case YouTube « Inclut une communication commerciale » (elle ne
+      dit pas pour quelle marque : Doigby l'avait cochee pour Babybel,
+      Mllex Chloe pour un code Uber).
+  « Mention commerciale (passage) »   le bout de description qui porte
+      un mot comme « partenariat », « sponsorise », « collaboration
+      commerciale », quand il est loin du signal (souvent tout en bas).
+
 TON VERDICT — choisis dans la liste deroulante :
   collaboration remuneree      le createur est paye par ce commanditaire
   mention sans collaboration   il en parle sans etre paye
@@ -81,6 +94,50 @@ def normaliser(texte):
     t = unicodedata.normalize("NFD", str(texte))
     t = "".join(c for c in t if unicodedata.category(c) not in ("Mn", "Cf"))
     return " ".join(t.lower().split())
+
+
+def passage_commercial(description, signaux, extrait):
+    """Le passage de la description qui porte la mention commerciale.
+
+    Demande de Vincent (07/09) : la mention « collaboration commerciale »
+    d'Encuisineaugustine etait a 800 caracteres du signal, hors extrait —
+    l'humain qui juge doit la voir sans ouvrir la video. On cherche
+    l'indice commercial le plus proche du signal ; s'il est deja dans
+    l'extrait, on ne repete rien.
+    """
+    if not description:
+        return ""
+    norme = normaliser_positionnel(description)
+    positions_signal = [norme.find(normaliser_positionnel(s))
+                        for s in signaux.split(" | ") if s]
+    positions_signal = [p for p in positions_signal if p >= 0]
+    candidats = []
+    for nom, motif in INDICATEURS.items():
+        for m in re.finditer(motif, norme):
+            distance = (min(abs(m.start() - p) for p in positions_signal)
+                        if positions_signal else PORTEE_INDICE)
+            candidats.append((distance, m.start(), m.end()))
+    if not candidats:
+        return ""
+    _, debut, fin = min(candidats)
+    morceau = description[max(0, debut - 100):fin + 100].strip()
+    if normaliser(morceau[:60]) and normaliser(morceau[:60]) in normaliser(extrait):
+        return ""  # deja visible dans l'extrait
+    prefixe = "…" if debut > 100 else ""
+    suffixe = "…" if fin + 100 < len(description) else ""
+    return prefixe + morceau.replace("\n", " ⏎ ") + suffixe
+
+
+def complements_depuis_base(base, video_id):
+    """(description complete, case cochee) si la base les connait."""
+    colonnes = [c[1] for c in base.execute("PRAGMA table_info(videos)")]
+    if "declaration_commerciale" not in colonnes:
+        r = base.execute("SELECT description FROM videos WHERE video_id = ?",
+                         (video_id,)).fetchone()
+        return (r[0] if r else ""), None
+    r = base.execute("SELECT description, declaration_commerciale FROM videos "
+                     "WHERE video_id = ?", (video_id,)).fetchone()
+    return (r[0] if r else ""), (r[1] if r else None)
 
 
 def entites_interprofessions():
@@ -230,11 +287,16 @@ def principal():
     ws = wb.create_sheet("a juger")
     entetes = ["N", "Chaine", "Abonnes", "Date", "Entite possible",
                "Signaux reperes", "Titre de la video", "Regarder",
-               "Extrait exact", "TON VERDICT", "Ton commentaire"]
+               "Extrait exact", "Case « communication commerciale »",
+               "Mention commerciale (passage)", "TON VERDICT",
+               "Ton commentaire"]
     ws.append(entetes)
     for c in ws[1]:
         c.font = gras
     jaune = PatternFill("solid", fgColor="FFF2CC")
+    vert = PatternFill("solid", fgColor="E2EFDA")
+    base = sqlite3.connect(chemin_base) if chemin_base.exists() else None
+    n_cochees = n_passages = 0
     for n, d in enumerate(lot, start=1):
         rang = n + 1
         ws.cell(rang, 1, n)
@@ -250,17 +312,32 @@ def principal():
         extrait = ws.cell(rang, 9, d["extrait"])
         extrait.fill = jaune
         extrait.alignment = Alignment(wrap_text=True, vertical="top")
-        # cellule 10 et 11 : a Vincent
+        description, declaration = (complements_depuis_base(base, d["video_id"])
+                                    if base else ("", None))
+        libelle = {1: "OUI, cochee par le createur", 0: "non"}.get(
+            declaration, "pas encore lue")
+        case = ws.cell(rang, 10, libelle)
+        if declaration == 1:
+            case.fill = vert
+            n_cochees += 1
+        passage = passage_commercial(description, d["signaux"], d["extrait"])
+        if passage:
+            n_passages += 1
+        cellule_passage = ws.cell(rang, 11, passage)
+        cellule_passage.alignment = Alignment(wrap_text=True, vertical="top")
+        # cellules 12 et 13 : a Vincent
+    if base:
+        base.close()
 
     if lot:
         validation = DataValidation(
             type="list", formula1='"' + ",".join(VERDICTS) + '"',
             allow_blank=True, showDropDown=False)
         ws.add_data_validation(validation)
-        validation.add(f"J2:J{len(lot) + 1}")
+        validation.add(f"L2:L{len(lot) + 1}")
 
     largeurs = {"A": 4, "B": 22, "C": 11, "D": 11, "E": 16, "F": 26, "G": 40,
-                "H": 8, "I": 60, "J": 26, "K": 40}
+                "H": 8, "I": 60, "J": 20, "K": 45, "L": 26, "M": 40}
     for lettre, largeur in largeurs.items():
         ws.column_dimensions[lettre].width = largeur
     ws.freeze_panes = "A2"
@@ -292,7 +369,9 @@ def principal():
         f.write(f"| dont canal interprofession | {len(canal_interpro)} |\n")
         f.write(f"| dont canal marque | {len(canal_marque)} |\n")
         f.write(f"| Lot stratifie (graine {GRAINE}) | {len(lot)} |\n")
-        f.write(f"| Extraits verifies contenant leur signal | {len(lot)} / {len(lot)} |\n\n")
+        f.write(f"| Extraits verifies contenant leur signal | {len(lot)} / {len(lot)} |\n")
+        f.write(f"| dont case « communication commerciale » cochee | {n_cochees} |\n")
+        f.write(f"| dont mention commerciale hors extrait, affichee | {n_passages} |\n\n")
         f.write("Moitie interprofession (valide les 94 % / 81 % de R3 sur du "
                 "neuf), moitie marque (premiere mesure du canal, decision "
                 "D3). Tirage aleatoire par canal ; affichage trie par "
