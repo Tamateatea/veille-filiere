@@ -52,13 +52,20 @@ DELAI_HTTP = 15
 
 
 def lire_flux(compte_id):
-    """Rend la liste des videos du flux RSS public de la chaine."""
+    """Rend (nom de la chaine, liste des videos) du flux RSS public.
+
+    Le nom vient du flux lui-meme (<author><name>) : c'est ce qui permet de
+    baptiser les 1 884 comptes herites de l'ancienne moisson sans nom
+    (critere 9 : chaque ligne soumise porte le compte, pas un identifiant).
+    """
     requete = urllib.request.Request(
         URL_FLUX.format(compte_id),
         headers={"User-Agent": "veille-filiere/1.0 (registre associatif; "
                                "contact via depot github Tamateatea)"})
     with urllib.request.urlopen(requete, timeout=DELAI_HTTP) as reponse:
         arbre = ET.fromstring(reponse.read())
+    noeud_nom = arbre.find("a:author/a:name", ESPACES)
+    nom_chaine = (noeud_nom.text or "").strip() if noeud_nom is not None else ""
     videos = []
     for entree in arbre.findall("a:entry", ESPACES):
         def texte(chemin):
@@ -70,7 +77,7 @@ def lire_flux(compte_id):
             "publiee": texte("a:published")[:10],
             "description": texte("media:group/media:description"),
         })
-    return videos
+    return nom_chaine, videos
 
 
 def principal():
@@ -83,28 +90,63 @@ def principal():
     vitrines = canaux_vitrines_depuis(signaux)
     base = sqlite3.connect(CHEMIN_BASE)
     maintenant = dt.datetime.now().isoformat(timespec="seconds")
+    colonnes = [c[1] for c in base.execute("PRAGMA table_info(curseurs)")]
+    if "echecs_consecutifs" not in colonnes:
+        with base:
+            base.execute("ALTER TABLE curseurs ADD COLUMN echecs_consecutifs "
+                         "INTEGER NOT NULL DEFAULT 0")
 
     # Les comptes jamais visites d'abord, puis les plus anciens passages :
     # une tournee interrompue reprend naturellement ou elle s'est arretee.
+    # Un compte marque `entite_vitrine` (chaine officielle d'une marque,
+    # integrer_comptes_marques.py) est route en decouverte par son
+    # identifiant, sans dependre de son nom d'affichage.
+    colonnes_comptes = [c[1] for c in base.execute("PRAGMA table_info(comptes)")]
+    col_vitrine = ("c.entite_vitrine" if "entite_vitrine" in colonnes_comptes
+                   else "NULL")
     comptes = base.execute(
-        "SELECT c.compte_id, c.nom FROM comptes c "
+        f"SELECT c.compte_id, c.nom, {col_vitrine} FROM comptes c "
         "LEFT JOIN curseurs k ON k.compte_id = c.compte_id "
         "WHERE c.surveille = 1 "
         "ORDER BY k.dernier_passage IS NOT NULL, k.dernier_passage").fetchall()
     if args.limite:
         comptes = comptes[:args.limite]
 
-    visites = echecs = nouvelles = detectees = 0
+    visites = echecs = nouvelles = detectees = baptises = 0
     detections_du_jour = []
-    for compte_id, nom in comptes:
+    echecs_du_jour = []
+    for compte_id, nom, entite_vitrine in comptes:
         try:
-            flux = lire_flux(compte_id)
-        except (urllib.error.URLError, ET.ParseError, TimeoutError, OSError):
+            nom_flux, flux = lire_flux(compte_id)
+        except (urllib.error.URLError, ET.ParseError, TimeoutError,
+                OSError) as erreur:
             echecs += 1
+            with base:
+                # Un echec ne fait pas avancer le curseur, mais il est compte :
+                # un flux qui repond 404 trois nuits de suite est une chaine
+                # disparue, a proposer au retrait (l'outil ne se modifie pas
+                # seul : critere 11).
+                base.execute(
+                    "INSERT INTO curseurs (compte_id, dernier_passage, "
+                    "echecs_consecutifs) VALUES (?, NULL, 1) "
+                    "ON CONFLICT(compte_id) DO UPDATE SET "
+                    "echecs_consecutifs = echecs_consecutifs + 1",
+                    (compte_id,))
+                serie = base.execute(
+                    "SELECT echecs_consecutifs FROM curseurs "
+                    "WHERE compte_id = ?", (compte_id,)).fetchone()[0]
+            echecs_du_jour.append(
+                (nom or compte_id, compte_id, str(erreur)[:60], serie))
             continue
         visites += 1
-        est_vitrine = (normaliser_positionnel(nom or "").lstrip("@")
-                       in vitrines)
+        if nom_flux and not nom:
+            with base:
+                base.execute("UPDATE comptes SET nom = ? WHERE compte_id = ?",
+                             (nom_flux, compte_id))
+            nom = nom_flux
+            baptises += 1
+        est_vitrine = bool(entite_vitrine) or (
+            normaliser_positionnel(nom or "").lstrip("@") in vitrines)
         try:
             with base:  # une transaction par compte
                 for v in flux:
@@ -140,9 +182,11 @@ def principal():
                             (nom or compte_id, d["entite"], d["force"],
                              d["signaux"], v["titre"][:60]))
                 base.execute(
-                    "INSERT INTO curseurs (compte_id, dernier_passage) "
-                    "VALUES (?, ?) ON CONFLICT(compte_id) "
-                    "DO UPDATE SET dernier_passage = excluded.dernier_passage",
+                    "INSERT INTO curseurs (compte_id, dernier_passage, "
+                    "echecs_consecutifs) VALUES (?, ?, 0) "
+                    "ON CONFLICT(compte_id) DO UPDATE SET "
+                    "dernier_passage = excluded.dernier_passage, "
+                    "echecs_consecutifs = 0",
                     (compte_id, maintenant))
         except sqlite3.Error:
             echecs += 1
@@ -160,7 +204,8 @@ def principal():
         f.write(f"| Comptes visites | {visites} |\n")
         f.write(f"| Flux en echec | {echecs} |\n")
         f.write(f"| Videos nouvelles enregistrees | {nouvelles} |\n")
-        f.write(f"| Detections nouvelles | {detectees} |\n\n")
+        f.write(f"| Detections nouvelles | {detectees} |\n")
+        f.write(f"| Comptes baptises depuis leur flux | {baptises} |\n\n")
         if detections_du_jour:
             f.write("| Compte | Entite | Force | Signaux | Titre |\n")
             f.write("|---|---|---|---|---|\n")
@@ -168,8 +213,20 @@ def principal():
                 f.write("| " + " | ".join(str(x) for x in ligne) + " |\n")
         else:
             f.write("Aucune detection nouvelle cette tournee.\n")
+        if echecs_du_jour:
+            f.write("\n## Flux en echec\n\n")
+            f.write("Un flux en echec trois tournees de suite est une chaine "
+                    "probablement disparue : PROPOSITION de la retirer de la "
+                    "surveillance (rien n'est retire sans confirmation, "
+                    "critere 11).\n\n")
+            f.write("| Compte | Identifiant | Erreur | Echecs consecutifs |\n")
+            f.write("|---|---|---|---:|\n")
+            for nom_e, cid, err, serie in echecs_du_jour:
+                marque = " **a retirer ?**" if serie >= 3 else ""
+                f.write(f"| {nom_e} | {cid} | {err} | {serie}{marque} |\n")
 
-    print(f"Comptes visites : {visites} (echecs : {echecs})")
+    print(f"Comptes visites : {visites} (echecs : {echecs}, "
+          f"baptises : {baptises})")
     print(f"Videos nouvelles : {nouvelles}  |  Detections : {detectees}")
     print(f"Ecrit : {chemin_rapport}")
 

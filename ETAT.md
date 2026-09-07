@@ -1,25 +1,75 @@
 # Etat — veille-filiere
 
-Mis a jour le **6 septembre 2026, fin de soiree** (fermeture de session).
+Mis a jour le **7 septembre 2026 au soir**.
 
 ## REPRENDRE ICI
 
-**Une seule decision est en attente de Vincent** : la confirmation des
-signaux evalues (MESURE, `recherche/evaluation_signaux_proposes_2026-09-06.csv`) —
-« les 6 » (fort, adosses a ses verdicts), « les 23 » (fort + faible,
-recommandation de Claude : c'est la que sont Doigby x Babybel, Kameto x
-Yoplait, McFly & Carlito x Danette…), ou « attends ».
-Des sa reponse : activer les signaux -> `rescanner_base.py` -> les
-candidats arrivent pre-tries dans A_JUGER.
+**Une seule decision est en attente de Vincent**, et elle est maintenant
+chiffree (MESURE, `recherche/simulation_activation_2026-09-07.md`) :
+la detection a ete rejouee sur les 53 646 videos de la base avec les
+signaux de chaque option, pour compter ce qui arriverait dans A_JUGER.
 
-**Ensuite, dans l'ordre :**
-1. Integrer les 29 chaines officielles de marques trouvees
-   (`recherche/comptes_marques_2026-09-06.csv`) : vitrines a surveiller
-   + comptes au dictionnaire (confirmation de Vincent, critere 11).
-2. Marquer « rejete » les 46 signaux mesures comme bruit (avec l'accord
-   de Vincent).
-3. Le facteur tourne SEUL chaque nuit a 3h (tache planifiee Windows) :
-   ouvrir le dernier `recherche/facteur_*.md` au matin.
+| Option | Signaux actives | Paires R3 nouvelles | deja jugees | **a juger** |
+|---|---:|---:|---:|---:|
+| « les 6 » (fort seulement) | 6 | 18 | 12 | **6** |
+| « les 23 » (fort + faible) | 22 | 26 | 12 | **14** |
+
+Les 12 paires deja jugees sont les memes dans les deux options : 3
+collaborations, 7 hors sujet, 2 « je ne sais pas » — le bruit attendu de
+« Les Produits Laitiers » seul, filtre par les indices commerciaux. Les 8
+paires que « les 23 » ajoutent sont exactement les cas cites la veille :
+Doigby x Babybel (2), Konbini x Danette (2), Mllex Chloe x Danette,
+JohanPapz x Herta, Kameto x Yoplait, Encuisineaugustine x Le Gaulois —
+toutes avec un indice commercial a cote du signal. Recommandation
+inchangee : **« les 23 »**.
+
+Des sa reponse, UNE commande fait tout (dictionnaire modifie avec trace,
+puis re-balayage, puis classeur) :
+
+    python outils/appliquer_evaluation.py --appliquer 23 --rejeter
+    python outils/rescanner_base.py
+    python outils/generer_a_juger.py
+
+(`--rejeter` passe les 46 signaux mesures comme bruit en `rejete` ;
+`--appliquer 6` pour l'autre option ; sans argument, le script ne fait
+que la simulation.)
+
+**Deuxieme confirmation attendue, preparee et simulee** (MESURE,
+`recherche/integration_comptes_marques_2026-09-07_simulation.md`) :
+les 30 chaines officielles de marques trouvees avec certitude (28 pas
+encore en base). Effet : chaque chaine entre en surveillance comme
+VITRINE de sa marque (ce qu'elle publie part en decouverte, jamais en
+detection), et son @pseudo entre au dictionnaire en « compte de marque »
+confirme fort — le canal marque par @compte, celui qui a pris Nico
+d'Estais x @nestleenfrance. Les noms en texte libre restent hors
+detection (D-marques). Commande, apres accord :
+
+    python outils/integrer_comptes_marques.py --appliquer
+    python outils/rescanner_base.py
+
+Point a trancher dans la foulee : les 16 chaines « a verifier » restent
+dehors tant qu'un humain n'a pas confirme l'officialite
+(`--inclure-a-verifier` existe mais est deconseille).
+
+**Fait le 07/09 sans decision necessaire :**
+
+1. La tournee nocturne du 07/09 a 3h a tourne seule : 2 899 comptes,
+   322 videos nouvelles, 0 detection (`recherche/facteur_2026-09-07_0323.md`).
+2. Le facteur **baptise les comptes** depuis leur flux RSS : 1 884
+   comptes herites de l'ancienne moisson n'avaient qu'un identifiant
+   (critere 9 : une ligne soumise porte un compte, pas un `UC…`). La
+   tournee complete relancee le 07/09 au soir les nomme au passage ;
+   aucun de ces comptes sans nom n'avait de detection R3 (verifie en base).
+3. Les **flux en echec sont nommes** dans le rapport, avec un compteur
+   d'echecs consecutifs ; a 3, le rapport PROPOSE le retrait (rien n'est
+   retire seul). Les 4 echecs de chaque tournee sont 4 chaines disparues
+   (HTTP 404) : LaPanny et trois comptes sans nom.
+4. Le routage vitrine peut se faire **par identifiant de compte**
+   (colonne `entite_vitrine`), plus seulement par nom d'affichage — dans
+   le facteur et le re-balayage.
+5. `detecter.compiler_signal` : la regle de correspondance d'un signal
+   est exposee une fois, pour que les simulations testent un signal
+   `propose` exactement comme la detection le ferait.
 
 **Protocole etabli et valide par Vincent** : l'outil detecte -> Claude
 pre-trie chaque ligne avec raison -> Vincent tranche (les evidences en

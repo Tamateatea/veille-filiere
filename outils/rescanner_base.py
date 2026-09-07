@@ -31,15 +31,20 @@ def principal():
     base = sqlite3.connect(CHEMIN_BASE)
     maintenant = dt.datetime.now().isoformat(timespec="seconds")
 
+    colonnes_comptes = [c[1] for c in base.execute("PRAGMA table_info(comptes)")]
+    col_vitrine = ("c.entite_vitrine" if "entite_vitrine" in colonnes_comptes
+                   else "NULL")
     videos = base.execute(
-        "SELECT v.video_id, v.titre, v.description, c.nom "
+        f"SELECT v.video_id, v.titre, v.description, c.nom, {col_vitrine} "
         "FROM videos v JOIN comptes c ON c.compte_id = v.compte_id").fetchall()
 
     lignes = []
     par_entite = Counter()
     n_vitrines = 0
-    for video_id, titre, description, nom_compte in videos:
-        if normaliser_positionnel(nom_compte or "").lstrip("@") in vitrines:
+    for video_id, titre, description, nom_compte, entite_vitrine in videos:
+        # Vitrine par identifiant (chaine officielle de marque) ou par nom.
+        if entite_vitrine or (
+                normaliser_positionnel(nom_compte or "").lstrip("@") in vitrines):
             n_vitrines += 1
             continue
         texte = f"{titre or ''}\n{description or ''}"

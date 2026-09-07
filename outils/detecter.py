@@ -80,6 +80,30 @@ def normaliser_positionnel(texte):
     return "".join(sortie)
 
 
+def compiler_signal(texte, type_signal="", entite="", force="faible"):
+    """Construit UN signal detectable (la regle unique de correspondance).
+
+    Exposee pour que les scripts de simulation (appliquer_evaluation.py)
+    testent un signal `propose` avec exactement la regle de la detection.
+    """
+    texte = str(texte).strip()
+    norme = normaliser_positionnel(texte)
+    if norme.startswith(("#", "@")) or "." in norme:
+        # hashtag, compte ou site : la chaine exacte, non precedee d'un
+        # caractere de mot, non suivie d'un caractere de mot.
+        motif = r"(?<![\w#@])" + re.escape(norme) + r"(?!\w)"
+    else:
+        # texte libre : frontiere de mot des deux cotes.
+        motif = r"(?<!\w)" + re.escape(norme) + r"(?!\w)"
+    return {
+        "texte": texte,
+        "type_signal": str(type_signal or "").strip(),
+        "entite": str(entite or "").strip(),
+        "force": str(force or "faible").strip(),
+        "regex": re.compile(motif),
+    }
+
+
 def charger_signaux():
     """Rend (signaux actifs, signaux temoins) depuis le classeur maitre."""
     wb = openpyxl.load_workbook(CHEMIN_DICO, read_only=True, data_only=True)
@@ -91,22 +115,8 @@ def charger_signaux():
         d = dict(zip(entetes, l))
         if not d.get("texte"):
             continue
-        texte = str(d["texte"]).strip()
-        norme = normaliser_positionnel(texte)
-        if norme.startswith(("#", "@")) or "." in norme:
-            # hashtag, compte ou site : la chaine exacte, non precedee d'un
-            # caractere de mot, non suivie d'un caractere de mot.
-            motif = r"(?<![\w#@])" + re.escape(norme) + r"(?!\w)"
-        else:
-            # texte libre : frontiere de mot des deux cotes.
-            motif = r"(?<!\w)" + re.escape(norme) + r"(?!\w)"
-        signal = {
-            "texte": texte,
-            "type_signal": str(d.get("type_signal") or "").strip(),
-            "entite": str(d.get("entite") or "").strip(),
-            "force": str(d.get("force") or "faible").strip(),
-            "regex": re.compile(motif),
-        }
+        signal = compiler_signal(d["texte"], d.get("type_signal"),
+                                 d.get("entite"), d.get("force"))
         statut = str(d.get("statut") or "").strip()
         if statut == "confirme":
             actifs.append(signal)
