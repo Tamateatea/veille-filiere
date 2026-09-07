@@ -4,35 +4,19 @@ Mis a jour le **7 septembre 2026 au soir**.
 
 ## REPRENDRE ICI
 
-**Une seule decision est en attente de Vincent**, et elle est maintenant
-chiffree (MESURE, `recherche/simulation_activation_2026-09-07.md`) :
-la detection a ete rejouee sur les 53 646 videos de la base avec les
-signaux de chaque option, pour compter ce qui arriverait dans A_JUGER.
+**Decision prise le 07/09 a 22h : Vincent a dit « go ».** 22 signaux
+confirmes, 45 rejetes (MESURE, `recherche/activation_signaux_2026-09-07.md`),
+re-balayage complet fait (`recherche/rescan_2026-09-07_2200.md`, 220
+detections), et **`A_JUGER.xlsx` contient 13 lignes pre-triees** par Claude
+(colonnes L-N : verdict propose, certitude, raison) — 4 evidentes, 7
+probables, 2 a regarder (`recherche/a_juger_2026-09-07.md`).
 
-| Option | Signaux actives | Paires R3 nouvelles | deja jugees | **a juger** |
-|---|---:|---:|---:|---:|
-| « les 6 » (fort seulement) | 6 | 18 | 12 | **6** |
-| « les 23 » (fort + faible) | 22 | 26 | 12 | **14** |
+**En attente : les verdicts de Vincent sur ces 13 lignes.** Des qu'il les a
+saisis : `python outils/relire_jugements.py` (recolte + reponse a ses
+notes), puis `python outils/construire_dossiers.py` (les tables de sortie).
 
-Les 12 paires deja jugees sont les memes dans les deux options : 3
-collaborations, 7 hors sujet, 2 « je ne sais pas » — le bruit attendu de
-« Les Produits Laitiers » seul, filtre par les indices commerciaux. Les 8
-paires que « les 23 » ajoutent sont exactement les cas cites la veille :
-Doigby x Babybel (2), Konbini x Danette (2), Mllex Chloe x Danette,
-JohanPapz x Herta, Kameto x Yoplait, Encuisineaugustine x Le Gaulois —
-toutes avec un indice commercial a cote du signal. Recommandation
-inchangee : **« les 23 »**.
-
-Des sa reponse, UNE commande fait tout (dictionnaire modifie avec trace,
-puis re-balayage, puis classeur) :
-
-    python outils/appliquer_evaluation.py --appliquer 23 --rejeter
-    python outils/rescanner_base.py
-    python outils/generer_a_juger.py
-
-(`--rejeter` passe les 46 signaux mesures comme bruit en `rejete` ;
-`--appliquer 6` pour l'autre option ; sans argument, le script ne fait
-que la simulation.)
+La simulation qui a fonde la decision reste consultable :
+`recherche/simulation_activation_2026-09-07.md`.
 
 **Deuxieme confirmation attendue, preparee et simulee** (MESURE,
 `recherche/integration_comptes_marques_2026-09-07_simulation.md`) :
